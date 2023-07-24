@@ -82,15 +82,18 @@ class App extends Component {
       totalNodeCount: countNodes(0, Array.isArray(orgChartJson) ? orgChartJson[0] : orgChartJson),
       orientation: 'vertical',
       pathFunc: 'step',
+      hoveredNode: null,
+      hoveredNodePosition: null,
+      clickedNode: null,
       dimensions: undefined,
       centeringTransitionDuration: 800,
       translateX: 200,
       translateY: 300,
-      collapsible: true,
+      collapsible: false,
       shouldCollapseNeighborNodes: false,
       initialDepth: 10,
       depthFactor: undefined,
-      zoomable: true, 
+      zoomable: true,
       draggable: true,
       zoom: 0.75,
       scaleExtent: { min: 0.1, max: 1 },
@@ -134,6 +137,8 @@ class App extends Component {
     this.setScaleExtent = this.setScaleExtent.bind(this);
     this.setSeparation = this.setSeparation.bind(this);
     this.setNodeSize = this.setNodeSize.bind(this);
+    //this.handleNodeHover = this.handleNodeHover.bind(this);
+    this.handleNodeMouseOut = this.handleNodeMouseOut.bind(this);
   }
 
   setTreeData(data) {
@@ -273,11 +278,115 @@ class App extends Component {
       translateX: dimensions.width / 2.5,
       translateY: dimensions.height / 2,
     });
+
+    // Add event listener for node hover after the component has mounted
+    if (this.treeContainer) {
+      const treeInstance = this.treeContainer.getElementsByTagName('svg')[0];
+      treeInstance.addEventListener('click', this.handleNodeClick); // Change 'mousemove' to 'click'
+    }
+  }
+
+  handleNodeClick = (nodeData, evt) => {
+    // Get the node data from the event target (the clicked element)
+    console.log('Node clicked: ', nodeData);
+    if (nodeData) {
+      this.setState({ clickedNode: nodeData });
+    }
   };
 
-  displaySkills() {
-    this.setState({ pathFunc: 'diagonal' });
+  handleNodeMouseMove = (evt) => {
+    console.log('Mouse moved over node.');
+    // Only update the hovered node position when the event occurs on the tree container
+    if (evt.target === this.treeContainer) {
+      this.setState({
+        hoveredNodePosition: { x: evt.clientX, y: evt.clientY },
+      });
+    }
   };
+
+  // Don't forget to remove the event listener when the component unmounts
+  componentWillUnmount() {
+    if (this.treeContainer) {
+      const treeInstance = this.treeContainer.getElementsByTagName('svg')[0];
+      treeInstance.removeEventListener('click', this.handleNodeClick);
+    }
+  }
+
+  handleNodeMouseOut = () => {
+    console.log('Mouse left node.');
+    this.setState({
+      hoveredNode: null,
+    });
+  };
+
+  renderClickTextbox() {
+    const { clickedNode } = this.state;
+    if (!clickedNode) {
+      return null;
+    }
+
+    // Create a message to display when a node is clicked
+    const message = "You clicked on a node!";
+
+    const { x, y } = clickedNode;
+    const textboxStyle = {
+      position: 'absolute',
+      top: y - 25, // Adjust the values based on the size of your textbox
+      left: x - 125, // Adjust the values based on the size of your textbox
+      backgroundColor: 'white',
+      padding: '5px',
+      border: '1px solid black',
+      borderRadius: '5px',
+      boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)',
+      zIndex: 9999,
+    };
+
+    return (
+<div style={textboxStyle}>
+      <h3>Skills Information</h3>
+      <p>ClientX: {x}</p>
+      <p>ClientY: {y}</p>
+      <p>{message}</p>
+    </div>
+    );
+  }
+
+
+
+  renderHoverTextbox() {
+    const { hoveredNode, hoveredNodePosition } = this.state;
+    if (!hoveredNode || !hoveredNodePosition) {
+      return null;
+    }
+
+    const containerRect = this.treeContainer.getBoundingClientRect();
+    const { x, y } = hoveredNodePosition;
+
+    // Calculate the position of the hovered node relative to the tree container
+    const relativeX = x - containerRect.left;
+    const relativeY = y - containerRect.top;
+
+    // Adjust the position to center the textbox on the hovered node
+    const textboxStyle = {
+      position: 'absolute',
+      top: relativeY - 25, // Adjust the values based on the size of your textbox
+      left: relativeX - 125, // Adjust the values based on the size of your textbox
+      backgroundColor: 'white',
+      padding: '5px',
+      border: '1px solid black',
+      borderRadius: '5px',
+      boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)',
+      zIndex: 9999,
+    };
+
+    return (
+      <div style={textboxStyle}>
+        <h3>{hoveredNode.name}</h3>
+        {"Test"}
+      </div>
+    );
+  }
+
 
   render() {
     return (
@@ -694,16 +803,12 @@ class App extends Component {
                 styles={this.state.styles}
                 shouldCollapseNeighborNodes={this.state.shouldCollapseNeighborNodes}
                 // onUpdate={(...args) => {console.log(args)}}
-                onNodeClick={(node, evt) => {
-                  console.log('onNodeClick', node, evt);
-                }}
-                onNodeMouseOver={(node, evt) => {
-                  console.log('onNodeMouseOver', node, evt);
-
-                }}
-                onNodeMouseOut={(...args) => {
-                  console.log('onNodeMouseOut', args);
-                }}
+                // onNodeClick={(node, evt) => {
+                //   console.log('onNodeClick', node, evt);
+                // }}
+                onNodeClick={this.handleNodeClick}
+                onNodeMouseOver={(node, evt) => this.handleNodeHover(node, evt)}
+                onNodeMouseOut={this.handleNodeMouseOut}
                 onLinkClick={(...args) => {
                   console.log('onLinkClick');
                   console.log(args);
@@ -715,6 +820,7 @@ class App extends Component {
                   console.log('onLinkMouseOut', args);
                 }}
               />
+              {this.renderClickTextbox()}
             </div>
           </div>
         </div>
