@@ -80,21 +80,22 @@ class App extends Component {
     this.state = {
       data: orgChartJson,
       totalNodeCount: countNodes(0, Array.isArray(orgChartJson) ? orgChartJson[0] : orgChartJson),
-      orientation: 'horizontal',
+      orientation: 'vertical',
+      pathFunc: 'step',
       dimensions: undefined,
       centeringTransitionDuration: 800,
       translateX: 200,
       translateY: 300,
       collapsible: true,
       shouldCollapseNeighborNodes: false,
-      initialDepth: 1,
+      initialDepth: 10,
       depthFactor: undefined,
-      zoomable: true,
+      zoomable: true, 
       draggable: true,
-      zoom: 1,
+      zoom: 0.75,
       scaleExtent: { min: 0.1, max: 1 },
-      separation: { siblings: 2, nonSiblings: 2 },
-      nodeSize: { x: 200, y: 200 },
+      separation: { siblings: 1, nonSiblings: 1.5 },
+      nodeSize: { x: 250, y: 250 },
       enableLegacyTransitions: false,
       transitionDuration: 500,
       renderCustomNodeElement: customNodeFnMapping['svg'].fn,
@@ -272,7 +273,11 @@ class App extends Component {
       translateX: dimensions.width / 2.5,
       translateY: dimensions.height / 2,
     });
-  }
+  };
+
+  displaySkills() {
+    this.setState({ pathFunc: 'diagonal' });
+  };
 
   render() {
     return (
@@ -281,7 +286,8 @@ class App extends Component {
           <div className="column-left">
             <div className="controls-container">
               <div className="prop-container">
-                <h2 className="title">React D3 Tree</h2>
+                <h2 className="title">ADNOC Career Path</h2>
+                {/*
                 <h3 className="title">v{version}</h3>
                 <h3 className="title">
                   <a href="/react-d3-tree/docs">
@@ -317,8 +323,8 @@ class App extends Component {
                     React repository (large)
                   </button>
                 </div>
+                */}
               </div>
-
               {/* <div className="prop-container">
                 <h4 className="prop">
                   Dynamically updating <code>data</code>
@@ -691,8 +697,9 @@ class App extends Component {
                 onNodeClick={(node, evt) => {
                   console.log('onNodeClick', node, evt);
                 }}
-                onNodeMouseOver={(...args) => {
-                  console.log('onNodeMouseOver', args);
+                onNodeMouseOver={(node, evt) => {
+                  console.log('onNodeMouseOver', node, evt);
+
                 }}
                 onNodeMouseOut={(...args) => {
                   console.log('onNodeMouseOut', args);
