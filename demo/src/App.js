@@ -290,7 +290,13 @@ class App extends Component {
     // Get the node data from the event target (the clicked element)
     console.log('Node clicked: ', nodeData);
     if (nodeData) {
-      this.setState({ clickedNode: nodeData });
+      if (this.state.clickedNode && this.state.clickedNode.id === nodeData.id) {
+        // If the same node is clicked again, hide the textbox
+        this.setState({ clickedNode: null });
+      } else {
+        // Otherwise, show the textbox for the clicked node
+        this.setState({ clickedNode: nodeData });
+      }
     }
   };
 
@@ -332,7 +338,7 @@ class App extends Component {
     const textboxStyle = {
       position: 'absolute',
       top: y - 25, // Adjust the values based on the size of your textbox
-      left: x - 125, // Adjust the values based on the size of your textbox
+      left: x - 225, // Adjust the values based on the size of your textbox
       backgroundColor: 'white',
       padding: '5px',
       border: '1px solid black',
@@ -342,12 +348,12 @@ class App extends Component {
     };
 
     return (
-<div style={textboxStyle}>
-      <h3>Skills Information</h3>
-      <p>ClientX: {x}</p>
-      <p>ClientY: {y}</p>
-      <p>{message}</p>
-    </div>
+      <div style={textboxStyle}>
+        <h3>Skills Information</h3>
+        <p>ClientX: {x}</p>
+        <p>ClientY: {y}</p>
+        <p>{message}</p>
+      </div>
     );
   }
 
