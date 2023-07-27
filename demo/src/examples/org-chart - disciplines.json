@@ -1,0 +1,158 @@
+{
+    "name": "Petroleum and Reservoir Engineering",
+    "children": [
+        {
+            "name": "Completion Engineering",
+            "children": [
+                {
+                    "name": "Completion Design and Execution",
+                    "children": [
+                        {
+                            "name": "Senior Engineer, Completion Design"
+                        },
+                        {
+                            "name": "Senior Engineer, Pressure Modeling"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Petroleum Engineering",
+            "children": [
+                {
+                    "name": "Production Technology",
+                    "children": [
+                        {
+                            "name": "Senior Engineer, Artificial Lift"
+                        },
+                        {
+                            "name": "Senior Engineer, Well Optimization"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Reservoir Engineering",
+            "children": [
+                {
+                    "name": "Reservoir Surveillance and Management",
+                    "children": [
+                        {
+                            "name": "Senior Engineer, Reservoir Management"
+                        },
+                        {
+                            "name": "Senior Engineer, Reservoir Surveillance"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Well Operation and Testing",
+            "attributes": {
+                "Skill": "This works!"
+            },
+            "children": [
+                {
+                    "name": "Well Operations",
+                    "children": [
+                        {
+                            "name": "Senior Analyst, Well Operations"
+                        },
+                        {
+                            "name": "Senior Analyst, Well Testing"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Geology",
+            "children": [
+                {
+                    "name": "Development Geology",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        }
+                    ]
+                },
+                {
+                    "name": "Operations Geology",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        },
+                        {
+                            "name": "Senior Geologist, Operations"
+                        },
+                        {
+                            "name": "Senior Geologist, Mud Logging"
+                        }
+                    ]
+                },
+                {
+                    "name": "Geomechanics",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        }
+                    ]
+                },
+                {
+                    "name": "Structural Geology",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        }
+                    ]
+                },
+                {
+                    "name": "Stratigraphy",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        }
+                    ]
+                },
+                {
+                    "name": "Sedimentology",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        }
+                    ]
+                },
+                {
+                    "name": "Basin Modeling",
+                    "children": [
+                        {
+                            "name": "Senior Engineer, Basin modeling"
+                        },
+                        {
+                            "name": "Senior Engineer, Pressure modeling"
+                        }
+                    ]
+                },
+                {
+                    "name": "Exploration Geology",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        }
+                    ]
+                },
+                {
+                    "name": "Geomodelling",
+                    "children": [
+                        {
+                            "name": "Senior Geologist"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

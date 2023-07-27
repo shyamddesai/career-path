@@ -28,7 +28,7 @@ const textLayout = {
   },
 };
 
-const PureSvgNodeElement = ({ nodeDatum, orientation, toggleNode, onNodeClick }) => {
+const PureSvgNodeElement = ({ nodeDatum, orientation, toggleNode, nodeName, onNodeClick }) => {
   return (
     <>
       <circle r={20} onClick={toggleNode}></circle>

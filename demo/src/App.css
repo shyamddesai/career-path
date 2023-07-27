@@ -106,3 +106,22 @@
   stroke-width: 10;
 }
 
+.textbox-container {
+  position: absolute;
+  background-color: white;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+}
+
+/* Style the heading elements */
+.textbox-container h3 {
+  margin: 0;
+}
+
+.textbox-container h3 + p {
+  margin-top: 5px;
+}
+

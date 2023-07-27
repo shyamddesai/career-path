@@ -10,10 +10,11 @@ import './App.css';
 
 // Data examples
 import orgChartJson from './examples/org-chart.json';
+import skillsDescriptionJSON from './examples/skills-description.json';
 import flareJson from './examples/d3-hierarchy-flare.json';
 import reactTree from './examples/reactRepoTree';
 
-console.log('Demo React version: ', React.version);
+console.log('React version: ', React.version);
 
 const customNodeFnMapping = {
   svg: {
@@ -23,6 +24,7 @@ const customNodeFnMapping = {
         nodeDatum={rd3tProps.nodeDatum}
         toggleNode={rd3tProps.toggleNode}
         orientation={appState.orientation}
+      //nodeName={nodeName} // Attach the nodeName as a prop
       />
     ),
   },
@@ -71,6 +73,49 @@ const countNodes = (count = 0, n) => {
   return n.children.reduce((sum, child) => countNodes(sum, child), count);
 };
 
+// Create a function to find the node data from skillsDescriptionJSON
+const findNodeData = (discipline, subdiscipline) => {
+  return skillsDescriptionJSON.find(
+    (node) => node.discipline === discipline && node.subdiscipline === subdiscipline
+  );
+};
+
+// Helper function to create the nodeDataMap recursively
+const createNodeDataMap = (data, parentData, nodeDataMap, skillsDescriptionJSON) => {
+  if (!data.name) return;
+
+  const { name, attributes } = data;
+  const discipline = parentData ? parentData.name : "";
+  const subdiscipline = parentData ? name : "";
+
+  const skillData = findNodeData(discipline, subdiscipline, skillsDescriptionJSON);
+  // console.log("SkillData in createNodeDataMap: ", skillData);
+
+  const nodeData = {
+    discipline: discipline,
+    subdiscipline: subdiscipline,
+    skill: skillData ? skillData.skill : (attributes && attributes.Skill) || "",
+  };
+  // console.log("NodeData in createNodeDataMap: ", nodeData);
+
+  nodeDataMap[name] = nodeData;
+
+  if (data.children) {
+    data.children.forEach((child) => {
+      createNodeDataMap(child, data, nodeDataMap, skillsDescriptionJSON);
+    });
+  }
+};
+
+const nodeDataMap = {};
+createNodeDataMap(orgChartJson, null, nodeDataMap);
+
+// Assuming you have this method to handle node clicks
+const handleNodeClick = (nodeData) => {
+  const clickedNodeData = nodeDataMap[nodeData.name];
+  console.log("ClickedNode: ", clickedNodeData);
+};
+
 class App extends Component {
   constructor() {
     super();
@@ -82,25 +127,29 @@ class App extends Component {
       totalNodeCount: countNodes(0, Array.isArray(orgChartJson) ? orgChartJson[0] : orgChartJson),
       orientation: 'vertical',
       pathFunc: 'step',
-      hoveredNode: null,
-      hoveredNodePosition: null,
+      nodeDataMap: {}, // Add this line to the state
+      // hoveredNode: null,
+      // hoveredNodePosition: null,
       clickedNode: null,
-      dimensions: undefined,
-      centeringTransitionDuration: 800,
-      translateX: 200,
-      translateY: 300,
-      collapsible: false,
+      // dimensions: {
+      //   width: 0,
+      //   height: 0,
+      // },
+      centeringTransitionDuration: 200,
+      // translateX: 0,
+      // translateY: 0,
+      collapsible: true,
       shouldCollapseNeighborNodes: false,
       initialDepth: 10,
       depthFactor: undefined,
       zoomable: true,
       draggable: true,
-      zoom: 0.75,
+      zoom: 0.25,
       scaleExtent: { min: 0.1, max: 1 },
-      separation: { siblings: 1, nonSiblings: 1.5 },
-      nodeSize: { x: 250, y: 250 },
-      enableLegacyTransitions: false,
-      transitionDuration: 500,
+      separation: { siblings: 2, nonSiblings: 2 },
+      nodeSize: { x: 300, y: 300 },
+      enableLegacyTransitions: true,
+      transitionDuration: 200,
       renderCustomNodeElement: customNodeFnMapping['svg'].fn,
       styles: {
         nodes: {
@@ -138,7 +187,8 @@ class App extends Component {
     this.setSeparation = this.setSeparation.bind(this);
     this.setNodeSize = this.setNodeSize.bind(this);
     //this.handleNodeHover = this.handleNodeHover.bind(this);
-    this.handleNodeMouseOut = this.handleNodeMouseOut.bind(this);
+    //this.handleNodeMouseOut = this.handleNodeMouseOut.bind(this);
+    this.handleNodeClick = this.handleNodeClick.bind(this);
   }
 
   setTreeData(data) {
@@ -249,6 +299,7 @@ class App extends Component {
     }
   }
 
+  /*
   addChildNode = () => {
     const data = clone(this.state.data);
     const target = data[0].children ? data[0].children : data[0]._children;
@@ -271,128 +322,182 @@ class App extends Component {
       data,
     });
   };
+  */
 
   componentDidMount() {
     const dimensions = this.treeContainer.getBoundingClientRect();
+    console.log('dimensions: ', dimensions);
+
+    // Calculate the translateX and translateY values to center the tree container
+    const containerWidth = dimensions.width-500;
+    const containerHeight = dimensions.height-200;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const translateX = (windowWidth - containerWidth) / 2;
+    const translateY = (windowHeight - containerHeight) / 2;
+
+    // Update the state with the calculated dimensions and translate values
     this.setState({
-      translateX: dimensions.width / 2.5,
-      translateY: dimensions.height / 2,
+      dimensions: {
+        width: containerWidth,
+        height: containerHeight,
+      },
+      translateX,
+      translateY,
     });
 
     // Add event listener for node hover after the component has mounted
     if (this.treeContainer) {
       const treeInstance = this.treeContainer.getElementsByTagName('svg')[0];
-      treeInstance.addEventListener('click', this.handleNodeClick); // Change 'mousemove' to 'click'
+      //console.log('treeInstance: ', treeInstance);
+      this.treeContainer.addEventListener('click', this.handleNodeClick);
     }
+
+    // Create an empty nodeDataMap object
+    const nodeDataMap = {};
+
+    // Call the createNodeDataMap function with orgChartJson and skillsDescriptionJSON
+    createNodeDataMap(orgChartJson, null, nodeDataMap, skillsDescriptionJSON);
+
+    // Set the nodeDataMap in the component state
+    this.setState({ nodeDataMap });
   }
 
-  handleNodeClick = (nodeData, evt) => {
-    // Get the node data from the event target (the clicked element)
-    console.log('Node clicked: ', nodeData);
-    if (nodeData) {
-      if (this.state.clickedNode && this.state.clickedNode.id === nodeData.id) {
-        // If the same node is clicked again, hide the textbox
-        this.setState({ clickedNode: null });
-      } else {
-        // Otherwise, show the textbox for the clicked node
-        this.setState({ clickedNode: nodeData });
-      }
-    }
-  };
-
-  handleNodeMouseMove = (evt) => {
-    console.log('Mouse moved over node.');
-    // Only update the hovered node position when the event occurs on the tree container
-    if (evt.target === this.treeContainer) {
-      this.setState({
-        hoveredNodePosition: { x: evt.clientX, y: evt.clientY },
-      });
-    }
-  };
-
-  // Don't forget to remove the event listener when the component unmounts
   componentWillUnmount() {
     if (this.treeContainer) {
       const treeInstance = this.treeContainer.getElementsByTagName('svg')[0];
-      treeInstance.removeEventListener('click', this.handleNodeClick);
+      this.treeContainer.removeEventListener('click', this.handleNodeClick);
     }
   }
 
-  handleNodeMouseOut = () => {
-    console.log('Mouse left node.');
-    this.setState({
-      hoveredNode: null,
-    });
+  // findDiscipline = (node, targetNodeName) => {
+  //   console.log('Checking node passed to findDiscipline:', node);
+  //   console.log('Target node name passed to findDiscipline:', targetNodeName);
+
+  //   if (!node) {
+  //     console.log('findDiscipline node is null');
+  //     return null;
+  //   }
+
+  //   if (node.name === targetNodeName) {
+  //     return node;
+  //   }
+
+  //   if (node.children) {
+  //     for (const childNode of node.children) {
+  //       const foundDiscipline = this.findDiscipline(childNode, targetNodeName);
+  //       if (foundDiscipline) {
+  //         return foundDiscipline;
+  //       }
+  //     }
+  //   }
+
+  //   return null;
+  // };
+
+  handleNodeClick = (nodeData) => {
+    console.log('ClickedNode:', nodeData);
+    //console.log("NodeDataMap: ", nodeDataMap);
+
+    // Get the clicked node position relative to the tree container
+    const containerRect = this.treeContainer.getBoundingClientRect();
+    const x = nodeData.x + containerRect.left;
+    const y = nodeData.y + containerRect.top;
+
+    const clickedNodeData = nodeDataMap[nodeData.name];
+    //console.log("nodeData: ", nodeData);
+    //console.log("name: nodeData.name: ", nodeData.name);
+    //console.log('ClickedNode: ', clickedNodeData);
+
+    // If the data is available for the clicked node, show the textbox
+    if (clickedNodeData) {
+      this.setState({
+        clickedNode: { ...nodeData, ...clickedNodeData },
+        x: x, // Set x coordinate
+        y: y, // Set y coordinate
+      });
+    } else {
+      // If the data is not available, hide the textbox
+      this.setState({ clickedNode: null });
+    }
   };
 
+  // handleNodeMouseMove = (evt) => {
+  //   console.log('Mouse moved over node.');
+  //   // Only update the hovered node position when the event occurs on the tree container
+  //   if (evt.target === this.treeContainer) {
+  //     this.setState({
+  //       hoveredNodePosition: { x: evt.clientX, y: evt.clientY },
+  //     });
+  //   }
+  // };
+
+  // handleNodeMouseOut = () => {
+  //   console.log('Mouse left node.');
+  //   this.setState({
+  //     hoveredNode: null,
+  //   });
+  // };
+
   renderClickTextbox() {
+    // console.log('renderClickTextbox called');
+
     const { clickedNode } = this.state;
     if (!clickedNode) {
       return null;
     }
 
-    // Create a message to display when a node is clicked
-    const message = "You clicked on a node!";
+    const { discipline, subdiscipline, skill } = clickedNode;
 
-    const { x, y } = clickedNode;
-    const textboxStyle = {
-      position: 'absolute',
-      top: y - 25, // Adjust the values based on the size of your textbox
-      left: x - 225, // Adjust the values based on the size of your textbox
-      backgroundColor: 'white',
-      padding: '5px',
-      border: '1px solid black',
-      borderRadius: '5px',
-      boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)',
-      zIndex: 9999,
-    };
+    console.log('Textbox position (x, y):', this.state.x, this.state.y);
 
     return (
-      <div style={textboxStyle}>
-        <h3>Skills Information</h3>
-        <p>ClientX: {x}</p>
-        <p>ClientY: {y}</p>
-        <p>{message}</p>
+      <div className="textbox-container" style={{ top: this.state.y + 25, left: this.state.x - 250 }}>
+        <h3>Discipline</h3>
+        <p>{discipline}</p>
+
+        <h3>Sub-Discipline</h3>
+        <p>{subdiscipline}</p>
+
+        <h3>Skill Description</h3>
+        <p>{skill}</p>
       </div>
     );
   }
 
+  // renderHoverTextbox() {
+  //   const { hoveredNode, hoveredNodePosition } = this.state;
+  //   if (!hoveredNode || !hoveredNodePosition) {
+  //     return null;
+  //   }
 
+  //   const containerRect = this.treeContainer.getBoundingClientRect();
+  //   const { x, y } = hoveredNodePosition;
 
-  renderHoverTextbox() {
-    const { hoveredNode, hoveredNodePosition } = this.state;
-    if (!hoveredNode || !hoveredNodePosition) {
-      return null;
-    }
+  //   // Calculate the position of the hovered node relative to the tree container
+  //   const relativeX = x - containerRect.left;
+  //   const relativeY = y - containerRect.top;
 
-    const containerRect = this.treeContainer.getBoundingClientRect();
-    const { x, y } = hoveredNodePosition;
+  //   // Adjust the position to center the textbox on the hovered node
+  //   const textboxStyle = {
+  //     position: 'absolute',
+  //     top: relativeY - 25, // Adjust the values based on the size of your textbox
+  //     left: relativeX - 125, // Adjust the values based on the size of your textbox
+  //     backgroundColor: 'white',
+  //     padding: '5px',
+  //     border: '1px solid black',
+  //     borderRadius: '5px',
+  //     boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)',
+  //     zIndex: 9999,
+  //   };
 
-    // Calculate the position of the hovered node relative to the tree container
-    const relativeX = x - containerRect.left;
-    const relativeY = y - containerRect.top;
-
-    // Adjust the position to center the textbox on the hovered node
-    const textboxStyle = {
-      position: 'absolute',
-      top: relativeY - 25, // Adjust the values based on the size of your textbox
-      left: relativeX - 125, // Adjust the values based on the size of your textbox
-      backgroundColor: 'white',
-      padding: '5px',
-      border: '1px solid black',
-      borderRadius: '5px',
-      boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)',
-      zIndex: 9999,
-    };
-
-    return (
-      <div style={textboxStyle}>
-        <h3>{hoveredNode.name}</h3>
-        {"Test"}
-      </div>
-    );
-  }
-
+  //   return (
+  //     <div style={textboxStyle}>
+  //       <h3>{hoveredNode.name}</h3>
+  //       {"Test"}
+  //     </div>
+  //   );
+  // }
 
   render() {
     return (
@@ -403,72 +508,65 @@ class App extends Component {
               <div className="prop-container">
                 <h2 className="title">ADNOC Career Path</h2>
                 {/*
-                <h3 className="title">v{version}</h3>
-                <h3 className="title">
-                  <a href="/react-d3-tree/docs">
-                    <span role="img" aria-label="open book emoji">
-                      📖
-                    </span>{' '}
-                    API Docs (v3)
-                  </a>
-                </h3>
-                <h4 className="prop">Examples</h4>
-                <div style={{ marginBottom: '5px' }}>
-                  <button
-                    type="button"
-                    className="btn btn-controls btn-block"
-                    onClick={() => this.setTreeData(orgChartJson)}
-                  >
-                    Org chart (small)
-                  </button>
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    className="btn btn-controls btn-block"
-                    onClick={() => this.setTreeData(flareJson)}
-                  >
-                    d3-hierarchy - flare.json (medium)
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-controls btn-block"
-                    onClick={() => this.setTreeData(reactTree)}
-                  >
-                    React repository (large)
-                  </button>
-                </div>
-                */}
+                  <h3 className="title">v{version}</h3>
+                  <h3 className="title">
+                    <a href="/react-d3-tree/docs">
+                      <span role="img" aria-label="open book emoji">
+                        📖
+                      </span>{' '}
+                      API Docs (v3)
+                    </a>
+                  </h3>
+                  <h4 className="prop">Examples</h4>
+                  <div style={{ marginBottom: '5px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-controls btn-block"
+                      onClick={() => this.setTreeData(orgChartJson)}
+                    >
+                      Org chart (small)
+                    </button>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn-controls btn-block"
+                      onClick={() => this.setTreeData(flareJson)}
+                    >
+                      d3-hierarchy - flare.json (medium)
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-controls btn-block"
+                      onClick={() => this.setTreeData(reactTree)}
+                    >
+                      React repository (large)
+                    </button>
+                  </div>
+                  */}
               </div>
               {/* <div className="prop-container">
-                <h4 className="prop">
-                  Dynamically updating <code>data</code>
-                </h4>
-                <button
-                  type="button"
-                  className="btn btn-controls btn-block"
-                  onClick={() => this.addChildNode()}
-                >
-                  Insert Node
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-controls btn-block"
-                  onClick={() => this.removeChildNode()}
-                >
-                  Remove Node
-                </button>
-              </div> */}
+                  <h4 className="prop">
+                    Dynamically updating <code>data</code>
+                  </h4>
+                  <button
+                    type="button"
+                    className="btn btn-controls btn-block"
+                    onClick={() => this.addChildNode()}
+                  >
+                    Insert Node
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-controls btn-block"
+                    onClick={() => this.removeChildNode()}
+                  >
+                    Remove Node
+                  </button>
+                </div> */}
 
               <div className="prop-container">
                 <h4 className="prop">Orientation</h4>
-                <button
-                  type="button"
-                  className="btn btn-controls btn-block"
-                  onClick={() => this.setOrientation('horizontal')}
-                >
-                  {'Horizontal'}
-                </button>
                 <button
                   type="button"
                   className="btn btn-controls btn-block"
@@ -476,10 +574,24 @@ class App extends Component {
                 >
                   {'Vertical'}
                 </button>
+                <button
+                  type="button"
+                  className="btn btn-controls btn-block"
+                  onClick={() => this.setOrientation('horizontal')}
+                >
+                  {'Horizontal'}
+                </button>
               </div>
 
               <div className="prop-container">
                 <h4 className="prop">Path Function</h4>
+                <button
+                  type="button"
+                  className="btn btn-controls btn-block"
+                  onClick={() => this.setPathFunc('step')}
+                >
+                  {'Step'}
+                </button>
                 <button
                   type="button"
                   className="btn btn-controls btn-block"
@@ -501,16 +613,9 @@ class App extends Component {
                 >
                   {'Straight'}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-controls btn-block"
-                  onClick={() => this.setPathFunc('step')}
-                >
-                  {'Step'}
-                </button>
               </div>
 
-              <div className="prop-container">
+              {/* <div className="prop-container">
                 <label className="prop" htmlFor="customNodeElement">
                   Custom Node Element
                 </label>
@@ -521,7 +626,7 @@ class App extends Component {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
 
               <div className="prop-container">
                 <h4 className="prop">Collapsible</h4>
@@ -561,14 +666,14 @@ class App extends Component {
                 />
               </div>
 
-              <div className="prop-container">
+              {/* <div className="prop-container">
                 <h4 className="prop">Collapse neighbor nodes</h4>
                 <Switch
                   name="collapseNeighborsBtn"
                   checked={this.state.shouldCollapseNeighborNodes}
                   onChange={this.toggleCollapseNeighborNodes}
                 />
-              </div>
+              </div> */}
 
               <div className="prop-container">
                 <h4 className="prop">Enable Legacy Transitions</h4>
@@ -582,7 +687,7 @@ class App extends Component {
                   }
                 />
               </div>
-
+              {/*
               <div className="prop-container">
                 <div>
                   <label className="prop" htmlFor="translateX">
@@ -636,6 +741,7 @@ class App extends Component {
                   onChange={this.handleChange}
                 />
               </div>
+              */}
 
               {/* <div className="prop-container prop">{`Zoomable: ${this.state.zoomable}`}</div> */}
 
@@ -651,7 +757,7 @@ class App extends Component {
                   onChange={this.handleFloatChange}
                 />
               </div>
-
+              {/*
               <div className="prop-container">
                 <span className="prop prop-large">Scale Extent</span>
                 <label className="sub-prop" htmlFor="scaleExtentMin">
@@ -685,6 +791,7 @@ class App extends Component {
                   }
                 />
               </div>
+                */}
 
               <div className="prop-container">
                 <span className="prop prop-large">Node separation</span>
@@ -812,7 +919,8 @@ class App extends Component {
                 // onNodeClick={(node, evt) => {
                 //   console.log('onNodeClick', node, evt);
                 // }}
-                onNodeClick={this.handleNodeClick}
+                //onNodeClick={(nodeData) => handleNodeClick(nodeData)}
+                onNodeClick={this.handleNodeClick} // Pass the reference to handleNodeClick
                 onNodeMouseOver={(node, evt) => this.handleNodeHover(node, evt)}
                 onNodeMouseOut={this.handleNodeMouseOut}
                 onLinkClick={(...args) => {
@@ -831,6 +939,8 @@ class App extends Component {
           </div>
         </div>
       </div>
+
+
     );
   }
 }

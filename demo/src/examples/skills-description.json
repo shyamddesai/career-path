@@ -1,0 +1,27 @@
+[
+    {
+        "discipline": "Petroleum and Reservoir Engineering",
+        "subdiscipline": "Test",
+        "skill": "Temporary Skill"
+    },
+    {
+        "discipline": "Completion Engineering",
+        "subdiscipline": "Completion Design and Execution",
+        "skill": "Well Preparation -Completion and Work Over Operations"
+    },
+    {
+        "discipline": "Petroleum Engineering",
+        "subdiscipline": "Production Technology",
+        "skill": "Artificial Lift Selection, Design and Implementation"
+    },
+    {
+        "discipline": "Reservoir Engineering",
+        "subdiscipline": "Reservoir Surveillance and Management",
+        "skill": "Cased Hole and Production Well Logs"
+    },
+    {
+        "discipline": "Well Operation and Testing",
+        "subdiscipline": "Well Operations",
+        "skill": "Acidizing and Other Chemical Treatments"
+    }
+]
