@@ -144,7 +144,7 @@ class App extends Component {
       depthFactor: undefined,
       zoomable: true,
       draggable: true,
-      zoom: 0.25,
+      zoom: 0.85,
       scaleExtent: { min: 0.1, max: 1 },
       separation: { siblings: 2, nonSiblings: 2 },
       nodeSize: { x: 300, y: 300 },
@@ -329,8 +329,8 @@ class App extends Component {
     console.log('dimensions: ', dimensions);
 
     // Calculate the translateX and translateY values to center the tree container
-    const containerWidth = dimensions.width-500;
-    const containerHeight = dimensions.height-200;
+    const containerWidth = dimensions.width - 1000;
+    const containerHeight = dimensions.height - 200;
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     const translateX = (windowWidth - containerWidth) / 2;
