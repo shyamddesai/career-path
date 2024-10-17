@@ -57,8 +57,8 @@ The Career Path Visualizer aims to:
 1. **Frontend Setup**:
    ```bash
    # Clone the repository
-   git clone https://github.com/username/career-path-visualizer.git
-   cd career-path-visualizer
+   git clone https://github.com/shyamddesai/CareerPathVisualizer
+   cd CareerPathVisualizer
 
    # Install dependencies
    npm install
